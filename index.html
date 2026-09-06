@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Service</title>
+    <title>Global Account Service</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
@@ -12,18 +12,14 @@
         button:hover { background-color: #0056b3; }
         .toggle-link { color: #007bff; cursor: pointer; margin-top: 15px; display: inline-block; text-decoration: underline; }
         .hidden { display: none; }
-        .error { color: red; margin-top: 10px; }
-        .success { color: green; margin-top: 10px; }
+        .error { color: red; margin-top: 10px; font-size: 14px; }
+        .success { color: green; margin-top: 10px; font-size: 14px; }
     </style>
-
-    <!-- Firebase App and Auth Legacy/Compat Scripts for easy single-file integration -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
 <div class="container">
-    <!-- Auth Status Window -->
+    <!-- Auth Status Section -->
     <div id="status-section" class="hidden">
         <h2>Welcome!</h2>
         <p id="user-email"></p>
@@ -36,7 +32,7 @@
         <input type="email" id="signin-email" placeholder="Email Address" required>
         <input type="password" id="signin-password" placeholder="Password" required>
         <button id="btn-signin">Sign In</button>
-        <p class="toggle-link" onclick="toggleView(false)">Don't have an account? Sign Up</p>
+        <p class="toggle-link" id="link-to-signup">Don't have an account? Sign Up</p>
     </div>
 
     <!-- Sign Up Form -->
@@ -45,28 +41,39 @@
         <input type="email" id="signup-email" placeholder="Email Address" required>
         <input type="password" id="signup-password" placeholder="Password" required>
         <button id="btn-signup">Register</button>
-        <p class="toggle-link" onclick="toggleView(true)">Already have an account? Sign In</p>
+        <p class="toggle-link" id="link-to-signin">Already have an account? Sign In</p>
     </div>
 
-    <!-- Message Alerts -->
+    <!-- Messages -->
     <div id="msg-error" class="error"></div>
     <div id="msg-success" class="success"></div>
 </div>
 
-<script>
-    // 1. REPLACE THIS PLACEHOLDER WITH YOUR EXPORTED FIREBASE CONFIGURATION
+<!-- Firebase Modular SDK Script Configuration -->
+<script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { 
+        getAuth, 
+        createUserWithEmailAndPassword, 
+        signInWithEmailAndPassword, 
+        signOut, 
+        onAuthStateChanged 
+    } from "https://gstatic.com";
+
+    // Your integrated Firebase configuration
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyD0yNWKmaNxZzM4v0Y0vc_dhUNRcYhLbl4",
+        authDomain: "myjtlb-e614c.firebaseapp.com",
+        projectId: "myjtlb-e614c",
+        storageBucket: "myjtlb-e614c.firebasestorage.app",
+        messagingSenderId: "939519568881",
+        appId: "1:939519568881:web:b7335277d4c3fa1d607250",
+        measurementId: "G-44K7NM360T"
     };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    // Initialize Firebase and Authentication
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
     // DOM Elements
     const signinSection = document.getElementById('signin-section');
@@ -76,7 +83,7 @@
     const errorDiv = document.getElementById('msg-error');
     const successDiv = document.getElementById('msg-success');
 
-    // UI Toggle between Sign In and Sign Up views
+    // UI Toggle Functionality
     function toggleView(showSignIn) {
         clearMessages();
         if (showSignIn) {
@@ -93,8 +100,11 @@
         successDiv.innerText = '';
     }
 
-    // 2. Auth State Observer (Tracks if a user is logged in anywhere globally)
-    auth.onAuthStateChanged(user => {
+    document.getElementById('link-to-signup').addEventListener('click', () => toggleView(false));
+    document.getElementById('link-to-signin').addEventListener('click', () => toggleView(true));
+
+    // Global Identity Tracker (Listens to sign-ins globally)
+    onAuthStateChanged(auth, (user) => {
         clearMessages();
         if (user) {
             signinSection.classList.add('hidden');
@@ -108,31 +118,31 @@
         }
     });
 
-    // 3. Handle Sign Up
+    // Sign Up Logic
     document.getElementById('btn-signup').addEventListener('click', () => {
         const email = document.getElementById('signup-email').value;
         const password = document.getElementById('signup-password').value;
         clearMessages();
 
-        auth.createUserWithEmailAndPassword(email, password)
+        createUserWithEmailAndPassword(auth, email, password)
             .then(() => { successDiv.innerText = "Account successfully created!"; })
             .catch(error => { errorDiv.innerText = error.message; });
     });
 
-    // 4. Handle Sign In
+    // Sign In Logic
     document.getElementById('btn-signin').addEventListener('click', () => {
         const email = document.getElementById('signin-email').value;
         const password = document.getElementById('signin-password').value;
         clearMessages();
 
-        auth.signInWithEmailAndPassword(email, password)
+        signInWithEmailAndPassword(auth, email, password)
             .then(() => { successDiv.innerText = "Welcome back!"; })
             .catch(error => { errorDiv.innerText = error.message; });
     });
 
-    // 5. Handle Sign Out
+    // Sign Out Logic
     document.getElementById('btn-logout').addEventListener('click', () => {
-        auth.signOut()
+        signOut(auth)
             .then(() => { successDiv.innerText = "Signed out successfully."; })
             .catch(error => { errorDiv.innerText = error.message; });
     });
