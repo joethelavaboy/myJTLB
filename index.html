@@ -1,61 +1,142 @@
-<!-- Load the stable web versions of Firebase -->
-<script src="https://gstatic.com"></script>
-<script src="https://gstatic.com"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Service</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+        .toggle-link { color: #007bff; cursor: pointer; margin-top: 15px; display: inline-block; text-decoration: underline; }
+        .hidden { display: none; }
+        .error { color: red; margin-top: 10px; }
+        .success { color: green; margin-top: 10px; }
+    </style>
+
+    <!-- Firebase App and Auth Legacy/Compat Scripts for easy single-file integration -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+</head>
+<body>
+
+<div class="container">
+    <!-- Auth Status Window -->
+    <div id="status-section" class="hidden">
+        <h2>Welcome!</h2>
+        <p id="user-email"></p>
+        <button id="btn-logout">Sign Out</button>
+    </div>
+
+    <!-- Sign In Form -->
+    <div id="signin-section">
+        <h2>Sign In</h2>
+        <input type="email" id="signin-email" placeholder="Email Address" required>
+        <input type="password" id="signin-password" placeholder="Password" required>
+        <button id="btn-signin">Sign In</button>
+        <p class="toggle-link" onclick="toggleView(false)">Don't have an account? Sign Up</p>
+    </div>
+
+    <!-- Sign Up Form -->
+    <div id="signup-section" class="hidden">
+        <h2>Create Account</h2>
+        <input type="email" id="signup-email" placeholder="Email Address" required>
+        <input type="password" id="signup-password" placeholder="Password" required>
+        <button id="btn-signup">Register</button>
+        <p class="toggle-link" onclick="toggleView(true)">Already have an account? Sign In</p>
+    </div>
+
+    <!-- Message Alerts -->
+    <div id="msg-error" class="error"></div>
+    <div id="msg-success" class="success"></div>
+</div>
 
 <script>
-    // ⚠️ Make sure these match your real project settings exactly!
+    // 1. REPLACE THIS PLACEHOLDER WITH YOUR EXPORTED FIREBASE CONFIGURATION
     const firebaseConfig = {
-        apiKey: "AIzaSyAN395SFqRSd1gXZKdxnjEBFUyTJdF4SoQ", 
-        authDomain: "myjtlb.firebaseapp.com",
-        projectId: "myjtlb",
-        storageBucket: "myjtlb.firebasestorage.app",
-        messagingSenderId: "923975474214",
-        appId: "1:923975474214:web:7158b5defd7e90e61d5ae7"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
     };
 
-    // Initialize Firebase using the compatibility layer (highly stable)
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    let currentMode = 'login';
+    // DOM Elements
+    const signinSection = document.getElementById('signin-section');
+    const signupSection = document.getElementById('signup-section');
+    const statusSection = document.getElementById('status-section');
+    const userEmailText = document.getElementById('user-email');
+    const errorDiv = document.getElementById('msg-error');
+    const successDiv = document.getElementById('msg-success');
 
-    function switchTab(mode) {
-        currentMode = mode;
-        document.getElementById('login-tab').classList.toggle('active', mode === 'login');
-        document.getElementById('register-tab').classList.toggle('active', mode === 'register');
-        document.getElementById('form-title').innerText = mode === 'login' ? 'Login' : 'Register';
-        document.getElementById('submit-btn').innerText = mode === 'login' ? 'Sign In' : 'Create Account';
-        document.getElementById('message-box').innerText = '';
-    }
-
-    async function handleSubmit(event) {
-        event.preventDefault();
-        const msgBox = document.getElementById('message-box');
-        msgBox.innerText = 'Checking...';
-        msgBox.className = 'message';
-
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        if (currentMode === 'register') {
-            try {
-                await auth.createUserWithEmailAndPassword(email, password);
-                msgBox.innerText = "Account created! Switching to Login...";
-                msgBox.className = "message success";
-                setTimeout(() => switchTab('login'), 2000);
-            } catch (error) {
-                msgBox.innerText = error.message;
-                msgBox.className = "message error";
-            }
+    // UI Toggle between Sign In and Sign Up views
+    function toggleView(showSignIn) {
+        clearMessages();
+        if (showSignIn) {
+            signinSection.classList.remove('hidden');
+            signupSection.classList.add('hidden');
         } else {
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                // 🚀 SUCCESSFUL ROUTE
-                window.location.href = '/myJTLB/Success';
-            } catch (error) {
-                // 🛑 FAILED ROUTE
-                window.location.href = '/myJTLB/Unsuccess';
-            }
+            signinSection.classList.add('hidden');
+            signupSection.classList.remove('hidden');
         }
     }
+
+    function clearMessages() {
+        errorDiv.innerText = '';
+        successDiv.innerText = '';
+    }
+
+    // 2. Auth State Observer (Tracks if a user is logged in anywhere globally)
+    auth.onAuthStateChanged(user => {
+        clearMessages();
+        if (user) {
+            signinSection.classList.add('hidden');
+            signupSection.classList.add('hidden');
+            statusSection.classList.remove('hidden');
+            userEmailText.innerText = `Logged in as: ${user.email}`;
+        } else {
+            statusSection.classList.add('hidden');
+            signinSection.classList.remove('hidden');
+            userEmailText.innerText = '';
+        }
+    });
+
+    // 3. Handle Sign Up
+    document.getElementById('btn-signup').addEventListener('click', () => {
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        clearMessages();
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(() => { successDiv.innerText = "Account successfully created!"; })
+            .catch(error => { errorDiv.innerText = error.message; });
+    });
+
+    // 4. Handle Sign In
+    document.getElementById('btn-signin').addEventListener('click', () => {
+        const email = document.getElementById('signin-email').value;
+        const password = document.getElementById('signin-password').value;
+        clearMessages();
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then(() => { successDiv.innerText = "Welcome back!"; })
+            .catch(error => { errorDiv.innerText = error.message; });
+    });
+
+    // 5. Handle Sign Out
+    document.getElementById('btn-logout').addEventListener('click', () => {
+        auth.signOut()
+            .then(() => { successDiv.innerText = "Signed out successfully."; })
+            .catch(error => { errorDiv.innerText = error.message; });
+    });
 </script>
+
+</body>
+</html>
