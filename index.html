@@ -35,19 +35,18 @@
     <div id="message-box" class="message"></div>
 </div>
 
-<!-- Load Firebase Directly from the Web -->
 <script type="module">
     import { initializeApp } from "https://gstatic.com";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://gstatic.com";
 
     // ⚠️ PASTE YOUR FIREBASE WEB APP CONFIG CONFIGURATION KEYS HERE
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "://firebaseapp.com",
+        apiKey: "AIzaSyAN395SFqRSd1gXZKdxnjEBFUyTJdF4SoQ",
+        authDomain: "myjtlb.firebaseapp.com",
         projectId: "myjtlb",
-        storageBucket: "://appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        storageBucket: "myjtlb.firebasestorage.app",
+        messagingSenderId: "923975474214",
+        appId: "1:923975474214:web:7158b5defd7e90e61d5ae7"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -78,14 +77,22 @@
                 msgBox.className = "message success";
                 setTimeout(() => switchTab('login'), 2000);
             } else {
+                // Attempt secure sign in
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                msgBox.innerText = `Logged in as: ${userCredential.user.email}`;
+                msgBox.innerText = "Login verification approved. Routing...";
                 msgBox.className = "message success";
-                // Redirect user or open dashboard code goes here!
+                
+                // 🚀 SUCCESS ROUTE REDIRECT
+                window.location.href = '/myJTLB/Success';
             }
         } catch (error) {
             msgBox.innerText = error.message.replace("Firebase: ", "");
             msgBox.className = "message error";
+
+            if (currentMode === 'login') {
+                // 🛑 FAILED ROUTE REDIRECT (only fires if they fail a real login attempt)
+                window.location.href = '/myJTLB/Unsuccess';
+            }
         }
     }
 </script>
