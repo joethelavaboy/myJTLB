@@ -1,59 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Account System</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f7; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .auth-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 320px; }
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #e5e5ea; }
-        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #8e8e93; font-weight: 600; }
-        .tab.active { color: #007aff; border-bottom: 2px solid #007aff; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #d1d1d6; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 12px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .message { margin-top: 15px; font-size: 14px; text-align: center; font-weight: 500; }
-        .success { color: #34c759; }
-        .error { color: #ff3b30; }
-    </style>
-</head>
-<body>
+<!-- Load the stable web versions of Firebase -->
+<script src="https://gstatic.com"></script>
+<script src="https://gstatic.com"></script>
 
-<div class="auth-container">
-    <div class="tabs">
-        <div id="login-tab" class="tab active" onclick="switchTab('login')">Login</div>
-        <div id="register-tab" class="tab" onclick="switchTab('register')">Register</div>
-    </div>
-
-    <h2 id="form-title">Login</h2>
-    <form id="auth-form" onsubmit="handleSubmit(event)">
-        <input type="email" id="email" placeholder="Email Address" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="submit" id="submit-btn">Sign In</button>
-    </form>
-
-    <div id="message-box" class="message"></div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://gstatic.com";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://gstatic.com";
-
-    // ⚠️ PASTE YOUR FIREBASE WEB APP CONFIG CONFIGURATION KEYS HERE
+<script>
+    // ⚠️ Make sure these match your real project settings exactly!
     const firebaseConfig = {
-        apiKey: "AIzaSyAN395SFqRSd1gXZKdxnjEBFUyTJdF4SoQ",
-        authDomain: "myjtlb.firebaseapp.com",
+        apiKey: "YOUR_API_KEY", 
+        authDomain: "://firebaseapp.com",
         projectId: "myjtlb",
-        storageBucket: "myjtlb.firebasestorage.app",
-        messagingSenderId: "923975474214",
-        appId: "1:923975474214:web:7158b5defd7e90e61d5ae7"
+        storageBucket: "://appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    // Initialize Firebase using the compatibility layer (highly stable)
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
     let currentMode = 'login';
 
-    window.switchTab = function(mode) {
+    function switchTab(mode) {
         currentMode = mode;
         document.getElementById('login-tab').classList.toggle('active', mode === 'login');
         document.getElementById('register-tab').classList.toggle('active', mode === 'register');
@@ -62,40 +28,34 @@
         document.getElementById('message-box').innerText = '';
     }
 
-    window.handleSubmit = async function(event) {
+    async function handleSubmit(event) {
         event.preventDefault();
         const msgBox = document.getElementById('message-box');
-        msgBox.innerText = '';
+        msgBox.innerText = 'Checking...';
+        msgBox.className = 'message';
 
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
-        try {
-            if (currentMode === 'register') {
-                await createUserWithEmailAndPassword(auth, email, password);
+        if (currentMode === 'register') {
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
                 msgBox.innerText = "Account created! Switching to Login...";
                 msgBox.className = "message success";
                 setTimeout(() => switchTab('login'), 2000);
-            } else {
-                // Attempt secure sign in
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                msgBox.innerText = "Login verification approved. Routing...";
-                msgBox.className = "message success";
-                
-                // 🚀 SUCCESS ROUTE REDIRECT
-                window.location.href = '/myJTLB/Success';
+            } catch (error) {
+                msgBox.innerText = error.message;
+                msgBox.className = "message error";
             }
-        } catch (error) {
-            msgBox.innerText = error.message.replace("Firebase: ", "");
-            msgBox.className = "message error";
-
-            if (currentMode === 'login') {
-                // 🛑 FAILED ROUTE REDIRECT (only fires if they fail a real login attempt)
+        } else {
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                // 🚀 SUCCESSFUL ROUTE
+                window.location.href = '/myJTLB/Success';
+            } catch (error) {
+                // 🛑 FAILED ROUTE
                 window.location.href = '/myJTLB/Unsuccess';
             }
         }
     }
 </script>
-
-</body>
-</html>
